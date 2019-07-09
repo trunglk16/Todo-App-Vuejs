@@ -2,15 +2,14 @@
   <div>
     <input type="text" class="todo-input" v-model="newTodo" placeholder="List to do!!!!!" @keyup.enter="addTodo()">
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
-    <div v-for="(todo, index) in todosFiltered" v-bind:key="todo.id" class="todo-item">
-      <div class="todo-item-left">
-        <input @click="status(todo)" type="checkbox" v-model="todo.completed">
-        <div v-if="!todo.editing" :class="{completed : todo.completed}"  @dblclick="editTodo(todo)" class="todo-item-label">{{todo.title}}</div>
-        <input v-else class="todo-item-edit" @keyup.esc="cancelEdit(todo)" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" type="text" v-model="todo.title" v-focus>
-      </div>
-      <div @click="removeTodo(index)" class="remove-item">&times;
-      </div>
-    </div>
+    <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item" :todo="todo" :index="index" @removedTodo="removeTodo(index)">
+<!--      <div class="todo-item-left">-->
+<!--        <input @click="status(todo)" type="checkbox" v-model="todo.completed">-->
+<!--        <div v-if="!todo.editing" :class="{completed : todo.completed}"  @dblclick="editTodo(todo)" class="todo-item-label">{{todo.title}}</div>-->
+<!--        <input v-else class="todo-item-edit" @keyup.esc="cancelEdit(todo)" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" type="text" v-model="todo.title" v-focus>-->
+<!--      </div>-->
+
+    </todo-item>
     </transition-group>
     <div class="extra-container">
       <div>
@@ -40,8 +39,12 @@
 </template>
 
 <script>
+  import TodoItem from './TodoItem'
  export default {
    name: 'TodoList',
+   components: {
+     TodoItem
+   },
    data() {
      return {
        newTodo: '',
