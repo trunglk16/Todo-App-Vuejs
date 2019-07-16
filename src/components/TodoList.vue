@@ -64,7 +64,7 @@
       eventBus.$on('removedTodo', (id) => this.removeTodo(id))
       eventBus.$on('finishedEdit', (data) => this.finishedEdit(data))
       eventBus.$on('checkAllChanged', (checked) => this.checkAllTodos(checked))
-      eventBus.$on('filterChanged', (filter) => this.$store.state.filter = filter)
+      eventBus.$on('filterChanged', (filter) => this.filter = filter)
       eventBus.$on('clearCompletedTodos', () => this.clearCompleted())
     },
     beforeDestroy() {
@@ -76,23 +76,23 @@
     },
     computed: {
       remaining() {
-        return this.$store.state.todos.filter(todo => !todo.completed).length
+        return this.todos.filter(todo => !todo.completed).length
       },
       anyRemaining() {
         return this.remaining != 0
       },
       todosFiltered() {
-        if (this.$store.state.filter == 'all') {
+        if (this.filter == 'all') {
           return this.todos
-        } else if (this.$store.state.filter == 'active') {
-          return this.$store.state.todos.filter(todo => !todo.completed)
-        } else if (this.$store.state.filter == 'completed') {
-          return this.$store.state.todos.filter(todo => todo.completed)
+        } else if (this.filter == 'active') {
+          return this.todos.filter(todo => !todo.completed)
+        } else if (this.filter == 'completed') {
+          return this.todos.filter(todo => todo.completed)
         }
         return this.todos
       },
       showClearCompletedButton() {
-        return this.$store.state.todos.filter(todo => todo.completed).length > 0
+        return this.todos.filter(todo => todo.completed).length > 0
       }
     },
     methods: {
@@ -100,7 +100,7 @@
         if (this.newTodo.trim().length == 0) {
           return
         }
-        this.$store.state.todos.push({
+        this.todos.push({
           id: this.idForTodo,
           title: this.newTodo,
           completed: false,
@@ -109,18 +109,18 @@
         this.idForTodo++
       },
       removeTodo(id) {
-        const index = this.$store.state.todos.findIndex((item) => item.id == id)
-        this.$store.state.todos.splice(index, 1)
+        const index = this.todos.findIndex((item) => item.id == id)
+        this.todos.splice(index, 1)
       },
       checkAllTodos() {
-        this.$store.state.todos.forEach((todo) => todo.completed = event.target.checked)
+        this.todos.forEach((todo) => todo.completed = event.target.checked)
       },
       clearCompleted() {
-        this.todos = this.$store.state.todos.filter(todo => !todo.completed)
+        this.todos = this.todos.filter(todo => !todo.completed)
       },
       finishedEdit(data) {
-        const index = this.$store.state.todos.findIndex((item) => item.id == data.id)
-        this.$store.state.todos.splice(index, 1, data)
+        const index = this.todos.findIndex((item) => item.id == data.id)
+        this.todos.splice(index, 1, data)
       }
     }
   }
