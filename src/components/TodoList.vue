@@ -86,10 +86,10 @@
         this.newTodo = ''
         this.idForTodo++
       },
-      removeTodo(id) {
-        const index = this.$store.state.todos.findIndex((item) => item.id == id)
-        this.$store.state.todos.splice(index, 1)
-      },
+      // removeTodo(id) {
+      //   const index = this.$store.state.todos.findIndex((item) => item.id == id)
+      //   this.$store.state.todos.splice(index, 1)
+      // },
       checkAllTodos() {
         this.$store.state.todos.forEach((todo) => todo.completed = event.target.checked)
       },
