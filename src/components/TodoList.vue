@@ -1,176 +1,142 @@
 <template>
   <div>
-    <input type="text" class="todo-input" v-model="newTodo" placeholder="List to do!!!!!" @keyup.enter="addTodo()">
+    <input type="text" class="todo-input" placeholder="What needs to be done" v-model="newTodo" @keyup.enter="addTodo">
     <transition-group name="fade" enter-active-class="animated fadeInUp" leave-active-class="animated fadeOutDown">
-    <todo-item v-for="(todo, index) in todosFiltered" :key="todo.id" class="todo-item" :todo="todo" :index="index" @removedTodo="removeTodo(index)">
-<!--      <div class="todo-item-left">-->
-<!--        <input @click="status(todo)" type="checkbox" v-model="todo.completed">-->
-<!--        <div v-if="!todo.editing" :class="{completed : todo.completed}"  @dblclick="editTodo(todo)" class="todo-item-label">{{todo.title}}</div>-->
-<!--        <input v-else class="todo-item-edit" @keyup.esc="cancelEdit(todo)" @blur="doneEdit(todo)" @keyup.enter="doneEdit(todo)" type="text" v-model="todo.title" v-focus>-->
-<!--      </div>-->
-
-    </todo-item>
+      <todo-item v-for="todo in todosFiltered" :key="todo.id" :todo="todo" :checkAll="!anyRemaining">
+      </todo-item>
     </transition-group>
+
     <div class="extra-container">
-      <div>
-        <label>
-          <input type="checkbox" :checked="!anyRemaining" @change="checkAllTodos()"> Check All
-        </label>
-      </div>
-      {{remaining}} items left
+      <todo-check-all :anyRemaining="anyRemaining"></todo-check-all>
+      <todo-items-remaining :remaining="remaining"></todo-items-remaining>
     </div>
 
     <div class="extra-container">
-      <div>
-        <button :class="{ active: filter === 'all' }" @click="filter = 'all'">All</button>
-        <button :class="{ active: filter === 'active' }" @click="filter = 'active'"> Active</button>
-        <button :class="{ active: filter === 'completed' }" @click="filter = 'completed'"> Completed</button>
-      </div>
+      <todo-filtered></todo-filtered>
+
       <div>
         <transition name="fade">
-          <button v-if="showClearCompletedButton" @click="clearCompleted()">Clear completed</button>
+          <todo-clear-completed :showClearCompletedButton="showClearCompletedButton"></todo-clear-completed>
         </transition>
       </div>
+
     </div>
-
   </div>
-
-
 </template>
 
 <script>
   import TodoItem from './TodoItem'
- export default {
-   name: 'TodoList',
-   components: {
-     TodoItem
-   },
-   data() {
-     return {
-       newTodo: '',
-       idForTodo: 3,
-       beforeEditCache: '',
-       filter: 'all',
-       todos: [
-         {
-           'id': 1,
-           'title': 'Finish Vue Screencast',
-           'completed': true,
-           'editing': false
-         },
-         {
-           'id': 2,
-           'title': 'Take over world',
-           'completed': false,
-           'editing': false
-
-         },
-       ],
-       content: "love ya"
-     }
-   },
-   computed: {
-     remaining() {
-       return this.todos.filter(todo => !todo.completed).length
-     },
-     anyRemaining() {
-       return this.remaining !== 0
-     },
-     todosFiltered() {
-       if(this.filter === 'all')
-         return this.todos
-       else if ( this.filter === 'active')
-         return  this.todos.filter(todo => !todo.completed)
-       else return this.todos.filter(todo => todo.completed)
-     },
-     showClearCompletedButton(){
-       return this.todos.filter(todo => todo.completed).length > 0
-     }
-   },
-   directives: {
-     focus: {
-       inserted: function (el) {
-         el.focus()
-       }
-     }
-   },
-   methods: {
-     addTodo() {
-       if (this.newTodo.trim().length === 0) {
-         return
-       }
-       this.todos.push({
-         id: this.idForTodo,
-         title: this.newTodo,
-         completed: false,
-         editing: false
-       })
-
-       this.newTodo = ''
-       this.idForTodo++
-     },
-
-     removeTodo(index) {
-       this.todos.splice(index, 1)
-     },
-
-     editTodo(todo) {
-       this.beforeEditCache = todo.title
-       todo.editing = true
-     },
-
-     doneEdit(todo) {
-       if (todo.title.length === 0) {
-         todo.title = this.beforeEditCache
-       }
-       todo.editing = false
-     },
-
-     cancelEdit(todo) {
-       todo.title = this.beforeEditCache
-       todo.editing = false
-     },
-
-     status(todo) {
-       if (todo.completed) {
-         todo.completed = false
-         console.log(todo.completed)
-       } else {
-         todo.completed = true
-         console.log(todo.completed)
-       }
-
-     },
-
-     checkAllTodos() {
-       this.todos.map(todo => todo.completed = event.target.checked)
-       console.log(this.todos)
-     },
-
-     clearCompleted(){
-       this.todos = this.todos.filter(todo => !todo.completed)
-     }
-
-
-   }
- }
-
+  import TodoItemsRemaining from './TodoItemsRemaining'
+  import TodoCheckAll from './TodoCheckAll'
+  import TodoFiltered from './TodoFiltered'
+  import TodoClearCompleted from './TodoClearCompleted'
+  export default {
+    name: 'todo-list',
+    components: {
+      TodoItem,
+      TodoItemsRemaining,
+      TodoCheckAll,
+      TodoFiltered,
+      TodoClearCompleted,
+    },
+    data () {
+      return {
+        newTodo: '',
+        idForTodo: 3,
+        filter: 'all',
+        todos: [
+          {
+            'id': 1,
+            'title': 'Finish Vue Screencast',
+            'completed': false,
+            'editing': false,
+          },
+          {
+            'id': 2,
+            'title': 'Take over world',
+            'completed': false,
+            'editing': false,
+          },
+        ]
+      }
+    },
+    created() {
+      eventBus.$on('removedTodo', (id) => this.removeTodo(id))
+      eventBus.$on('finishedEdit', (data) => this.finishedEdit(data))
+      eventBus.$on('checkAllChanged', (checked) => this.checkAllTodos(checked))
+      eventBus.$on('filterChanged', (filter) => this.$store.state.filter = filter)
+      eventBus.$on('clearCompletedTodos', () => this.clearCompleted())
+    },
+    beforeDestroy() {
+      eventBus.$off('removedTodo')
+      eventBus.$off('finishedEdit')
+      eventBus.$off('checkAllChanged')
+      eventBus.$off('filterChanged')
+      eventBus.$off('clearCompletedTodos')
+    },
+    computed: {
+      remaining() {
+        return this.$store.state.todos.filter(todo => !todo.completed).length
+      },
+      anyRemaining() {
+        return this.remaining != 0
+      },
+      todosFiltered() {
+        if (this.$store.state.filter == 'all') {
+          return this.todos
+        } else if (this.$store.state.filter == 'active') {
+          return this.$store.state.todos.filter(todo => !todo.completed)
+        } else if (this.$store.state.filter == 'completed') {
+          return this.$store.state.todos.filter(todo => todo.completed)
+        }
+        return this.todos
+      },
+      showClearCompletedButton() {
+        return this.$store.state.todos.filter(todo => todo.completed).length > 0
+      }
+    },
+    methods: {
+      addTodo() {
+        if (this.newTodo.trim().length == 0) {
+          return
+        }
+        this.$store.state.todos.push({
+          id: this.idForTodo,
+          title: this.newTodo,
+          completed: false,
+        })
+        this.newTodo = ''
+        this.idForTodo++
+      },
+      removeTodo(id) {
+        const index = this.$store.state.todos.findIndex((item) => item.id == id)
+        this.$store.state.todos.splice(index, 1)
+      },
+      checkAllTodos() {
+        this.$store.state.todos.forEach((todo) => todo.completed = event.target.checked)
+      },
+      clearCompleted() {
+        this.todos = this.$store.state.todos.filter(todo => !todo.completed)
+      },
+      finishedEdit(data) {
+        const index = this.$store.state.todos.findIndex((item) => item.id == data.id)
+        this.$store.state.todos.splice(index, 1, data)
+      }
+    }
+  }
 </script>
 
 <style lang="scss">
-  @import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css")
-  ;
+  @import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css");
   .todo-input {
     width: 100%;
     padding: 10px 18px;
-    font-size: 12px;
+    font-size: 18px;
     margin-bottom: 16px;
-
-    & :focus {
+    &:focus {
       outline: 0;
     }
   }
-
   .todo-item {
     margin-bottom: 12px;
     display: flex;
@@ -178,47 +144,38 @@
     justify-content: space-between;
     animation-duration: 0.3s;
   }
-
   .remove-item {
     cursor: pointer;
     margin-left: 14px;
-
-    & :hover {
+    &:hover {
       color: black;
     }
   }
-
-  .todo-item-left {
-    font-size: 18px;
+  .todo-item-left { // later
     display: flex;
     align-items: center;
   }
-
   .todo-item-label {
     padding: 10px;
     border: 1px solid white;
     margin-left: 12px;
   }
-
   .todo-item-edit {
-    font-size: 18px;
+    font-size: 24px;
     color: #2c3e50;
     margin-left: 12px;
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #ccc; //override defaults
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
-
-    & :focus {
+    &:focus {
       outline: none;
     }
   }
-
   .completed {
     text-decoration: line-through;
     color: grey;
   }
-
   .extra-container {
     display: flex;
     align-items: center;
@@ -228,28 +185,25 @@
     padding-top: 14px;
     margin-bottom: 14px;
   }
-
-  button{
+  button {
     font-size: 14px;
     background-color: white;
     appearance: none;
-
     &:hover {
       background: lightgreen;
     }
-
     &:focus {
       outline: none;
     }
   }
-
   .active {
     background: lightgreen;
   }
-
+  // CSS Transitions
   .fade-enter-active, .fade-leave-active {
     transition: opacity .2s;
   }
-
-
+  .fade-enter, .fade-leave-to {
+    opacity: 0;
+  }
 </style>
