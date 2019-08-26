@@ -1,18 +1,21 @@
 <template>
   <div id="app" class="container">
-    <img src="./assets/logo.png" class="logo">
-    <HelloWorld/>
+<!--    <img src="./assets/logo.png" class="logo">-->
+<!--    <HelloWorld/>-->
     <TodoList/>
+<!--    <login/>-->
   </div>
 </template>
 
 <script>
 import HelloWorld from './components/HelloWorld'
-import TodoList from './components/TodoList'
+import TodoList from './components/TodoList/TodoList'
+import Login from "./components/Login/login";
 
 export default {
   name: 'App',
   components: {
+    Login,
     HelloWorld,
     TodoList
   }
