@@ -1,25 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-
+import VueAxios from 'vue-axios'
+import axios from 'axios'
 Vue.use(Vuex)
-
+Vue.use(VueAxios, axios)
+axios.defaults.baseURL = 'http://127.0.0.1:9000/'
 export const store = new Vuex.Store({
   state: {
     filter: 'all',
-    todos: [
-      {
-        'id': 1,
-        'title': 'Finish Vue Screencast',
-        'completed': false,
-        'editing': false,
-      },
-      {
-        'id': 2,
-        'title': 'Take over world',
-        'completed': false,
-        'editing': false,
-      },
-    ]
+    todos: []
   },
   getters: {
     remaining(state) {
@@ -72,9 +61,21 @@ export const store = new Vuex.Store({
     },
     clearCompleted(state) {
       state.todos = state.todos.filter(todo => !todo.completed)
+    },
+    showList(state, todos) {
+      state.todos = todos
     }
   },
   actions: {
+    showList(context){
+      axios.get('/post').then(
+        response => {
+          console.log(response.data.result)
+          context.commit('showList', response.data.result)
+        }).catch(
+        console.log(error)
+      )
+    },
     addTodo(context, todo) {
       setTimeout(() => {
         context.commit('addTodo', todo)

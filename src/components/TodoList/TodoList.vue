@@ -45,6 +45,9 @@
         idForTodo: 3,
       }
     },
+    created() {
+    this.$store.dispatch('showList')
+    },
     computed: {
       anyRemaining() {
         return this.$store.getters.anyRemaining
